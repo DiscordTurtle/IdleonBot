@@ -1,0 +1,31 @@
+{
+  "cSpell.words": [
+    "getpixel",
+    "plinko",
+    "pyautogui",
+    "skillbar",
+    "skillset"
+  ],
+  "terminal.integrated.cwd": "${workspaceFolder}",
+
+  // 1) so that VSCode's Python language server / IntelliSense
+  //    can resolve "import computer_vision..."
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}"
+  ],
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}"
+  ],
+
+  // 2) so that when you hit "Run Python File in Terminal" or open
+  //    a new terminal, PYTHONPATH is set to the root of your repo.
+  "terminal.integrated.env.windows": {
+    "PYTHONPATH": "${workspaceFolder}"
+  },
+  "terminal.integrated.env.osx": {
+    "PYTHONPATH": "${workspaceFolder}"
+  },
+  "terminal.integrated.env.linux": {
+    "PYTHONPATH": "${workspaceFolder}"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "chest_skill_pixel": {
+    "position": {
+      "x": 1730,
+      "y": 946,
+      "relative_x": 0.901
+    },
+    "rgb": {
+      "r": 255,
+      "g": 252,
+      "b": 239
+    }
+  },
+  "skillbar_up_pixel": {
+    "position": {
+      "x": 1802,
+      "y": 934,
+      "relative_x": 0.9385
+    },
+    "rgb": {
+      "r": 163,
+      "g": 163,
+      "b": 163
+    }
+  },
+  "gaming_pixel": {
+    "position": {
+      "x": 1390,
+      "y": 674,
+      "relative_x": 0.724
+    },
+    "rgb": {
+      "r": 193,
+      "g": 77,
+      "b": 73
+    }
+  },
+  "ping_pong_game_start_pixel": {
+    "position": {
+      "x": 970,
+      "y": 482,
+      "relative_x": 0.5052
+    },
+    "rgb": {
+      "r": 252,
+      "g": 239,
+      "b": 246
+    }
+  }
+}
