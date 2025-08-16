@@ -33,9 +33,9 @@ def main():
     jobs = [
         # game-related tasks
         #some of these times can be pulled from data instead of hardcoded
-        ScheduledJob(tasks.collect_critters,
-                     args=(profile_name,),
-                     interval=20*60),
+        # ScheduledJob(tasks.collect_critters,
+        #              args=(profile_name,),
+        #              interval=20*60),
         # ScheduledJob(tasks.check_refinery,
         #              args=(profile_name,),
         #              interval=15),

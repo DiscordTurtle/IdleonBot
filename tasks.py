@@ -1,6 +1,5 @@
 
 import time
-from computer_vision.image_functions import click_image
 from computer_vision.pixel_functions import check_pixel, click_pixel
 import json
 import pyautogui
@@ -44,14 +43,22 @@ def deposit_loot():
     if not check_pixel(skillbar_up_pixel, tolerance=20):
         print(f"Skills are not active, activating skills.")
         pyautogui.press('q')
-    time.sleep(0.3)
+    time.sleep(0.5)
     if check_pixel(chest_key, tolerance=10):
         click_pixel(chest_key)
+        click_pixel(chest_key)
+        time.sleep(1)
+
         print(f"Clicked on {chest_key} pixel.")
         return True
     for i in range(3):
         if check_pixel(chest_key, tolerance=10):
             click_pixel(chest_key)
+            click_pixel(chest_key)
+            
+            time.sleep(1)
+            
+
             print(f"Clicked on {chest_key} pixel.")
             break
         elif check_pixel(skillbar_up_pixel, tolerance=10):

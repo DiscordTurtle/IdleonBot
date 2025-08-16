@@ -36,15 +36,15 @@
     }
   },
   "ping_pong_game_start_pixel": {
-    "position": {
-      "x": 970,
-      "y": 482,
-      "relative_x": 0.5052
-    },
-    "rgb": {
-      "r": 252,
-      "g": 239,
-      "b": 246
-    }
+  "position": {
+    "x": 773,
+    "y": 452,
+    "relative_x": 0.4026
+  },
+  "rgb": {
+    "r": 252,
+    "g": 239,
+    "b": 246
   }
+}
 }
