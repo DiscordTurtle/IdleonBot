@@ -211,8 +211,9 @@ class OverlayApp:
                 rgb = (0, 0, 0)
             out.append({"name": state["name"], "center": state["center"], "rgb": list(rgb)})
 
-        # ensure folder exists
-        folder = os.path.join(os.path.dirname(__file__), "saved_locations")
+        # ensure folder exists (saved locations at repository root, not inside auxiliary/)
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        folder = os.path.join(repo_root, 'saved_locations')
         os.makedirs(folder, exist_ok=True)
 
         # default filename suggestion
@@ -386,7 +387,8 @@ class OverlayApp:
             pass
 
     def load_file(self):
-        folder = os.path.join(os.path.dirname(__file__), "saved_locations")
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        folder = os.path.join(repo_root, "saved_locations")
         file_path = filedialog.askopenfilename(initialdir=folder, title="Open saved buttons", filetypes=[("JSON files", "*.json"), ("All files", "*")])
         if not file_path:
             return
