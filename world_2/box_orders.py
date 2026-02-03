@@ -16,6 +16,14 @@ import json
 import time
 import sys
 import msvcrt
+import threading
+
+# Optional: global hotkey support. Falls back to console-only input if not available.
+try:
+    import keyboard
+    KEYBOARD_AVAILABLE = True
+except Exception:
+    KEYBOARD_AVAILABLE = False
 
 try:
     import pyautogui
@@ -77,19 +85,33 @@ def main():
     # small pause between pyautogui calls (can be adjusted)
     pyautogui.PAUSE = 0.01
 
-    print(f"Starting loop. Pen: {pen}, OrderBox: {order}. Stop with Ctrl+C.")
+    stop_event = threading.Event()
+    if KEYBOARD_AVAILABLE:
+        # register global hotkeys (works even when the console is not focused)
+        keyboard.add_hotkey('s', lambda: stop_event.set())
+        keyboard.add_hotkey('q', lambda: stop_event.set())
+        print(f"Starting loop. Pen: {pen}, OrderBox: {order}. Stop with Ctrl+C, or press 's'/'q' (global hotkey) to quit.")
+    else:
+        print(f"Starting loop. Pen: {pen}, OrderBox: {order}. Stop with Ctrl+C or press 's' in this console to quit.")
+
     try:
         while True:
-            # if a key was pressed in the console, check for 'q' to quit
-            try:
-                if msvcrt.kbhit():
-                    ch = msvcrt.getwch()
-                    if ch.lower() == 'q':
-                        print('\nStop key (q) pressed. Exiting loop.')
-                        break
-            except Exception:
-                # non-fatal if console input isn't available
-                pass
+            # check stop_event set by global hotkey (if available)
+            if stop_event.is_set():
+                print('Stop key pressed. Exiting loop.')
+                break
+
+            # fallback: if global hotkeys aren't available, watch for console keypress
+            if not KEYBOARD_AVAILABLE:
+                try:
+                    if msvcrt.kbhit():
+                        ch = msvcrt.getwch()
+                        if ch.lower() in ('s', 'q'):
+                            print(f'\nStop key ({ch}) pressed. Exiting loop.')
+                            break
+                except Exception:
+                    # non-fatal if console input isn't available
+                    pass
             # click Pen once
             pyautogui.click(pen['x'], pen['y'])
             # click OrderBox twice
@@ -102,6 +124,13 @@ def main():
             time.sleep(0.1)
     except KeyboardInterrupt:
         print('\nStopped by user (KeyboardInterrupt).')
+    finally:
+        # cleanup keyboard hooks if they were registered
+        if KEYBOARD_AVAILABLE:
+            try:
+                keyboard.unhook_all_hotkeys()
+            except Exception:
+                pass
 
 
 if __name__ == '__main__':
