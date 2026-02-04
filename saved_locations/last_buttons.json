@@ -1,0 +1,20 @@
+{
+  "buttons": [
+    {
+      "name": "log_minigame_center",
+      "center": {
+        "x": 774,
+        "y": 355
+      },
+      "rgb": [
+        255,
+        0,
+        0
+      ]
+    }
+  ],
+  "panel": {
+    "x": 1610,
+    "y": 10
+  }
+}

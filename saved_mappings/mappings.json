@@ -1,0 +1,24 @@
+{
+  "mappings": [
+    {
+      "name": "Map_1770214033",
+      "needle": "saved_images\\gaming\\needle_1770214014.png",
+      "region": {
+        "x": 136,
+        "y": 106,
+        "w": 1277,
+        "h": 738
+      }
+    },
+    {
+      "name": "Map_1770214049",
+      "needle": "saved_images\\gaming\\needle_1770214014.png",
+      "region": {
+        "x": 142,
+        "y": 149,
+        "w": 1037,
+        "h": 420
+      }
+    }
+  ]
+}
