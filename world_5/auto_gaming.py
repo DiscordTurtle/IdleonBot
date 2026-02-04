@@ -86,7 +86,7 @@ def load_region(path):
 
 
 def load_templates(repo_root):
-    names = ['sprinkler.png', 'log.png', 'squirrel.png', 'squirrel_2.png', 'shovel.png', 'log_minigame.png']
+    names = ['sprinkler.png', 'log.png', 'squirrel.png', 'squirrel_2.png', 'shovel.png', 'squirrel_upgrade.png', 'chem_plant_1.png', 'chem_plant_2.png', 'log_minigame.png']
     templates = {}
     for fname in names:
         path = os.path.join(repo_root, 'saved_images', 'gaming', fname)
@@ -184,12 +184,14 @@ def main():
     pyautogui.FAILSAFE = False
     pyautogui.PAUSE = 0.01
 
-    per_thresholds = {'sprinkler': 0.1, 'log': 0.1, 'squirrel': 0.1, 'squirrel_2': 0.1, 'shovel': 0.1, 'log_minigame': 0.7}
+    per_thresholds = {'sprinkler': 0.1, 'log': 0.1, 'squirrel': 0.1, 'squirrel_2': 0.1, 'shovel': 0.1, 'squirrel_upgrade': 0.85, 'chem_plant_1': 0.1, 'chem_plant_2': 0.1, 'log_minigame': 0.7}
     scales = [0.85, 0.9, 1.0, 1.05]
     click_delay = 0.12  # delay after clicks to reduce missed clicks
 
+    iteration = 1
     try:
         while True:
+            print(f'Iteration {iteration}')
             if stop_event.is_set():
                 print('Stop key pressed. Exiting.')
                 break
@@ -214,8 +216,27 @@ def main():
                 img_cv = None
 
             found_map = {}  # name -> (center_x, center_y, score)
+            check_squirrels = (iteration % 100 == 0)
             if img_cv is not None and CV2_AVAILABLE:
+                # chem plants: check every iteration and click if present
+                for chem in ('chem_plant_1', 'chem_plant_2'):
+                    chem_entry = templates.get(chem)
+                    if chem_entry and not chem_entry.get('missing') and chem_entry.get('cv') is not None:
+                        cval, cloc, csize = match_template_multi(img_cv, chem_entry['cv'], chem_entry['w'], chem_entry['h'], scales=scales)
+                        if cval >= per_thresholds.get(chem, 0.1) and cloc is not None:
+                            cx = rx + cloc[0] + csize[0] // 2
+                            cy = ry + cloc[1] + csize[1] // 2
+                            try:
+                                pyautogui.click(cx, cy)
+                                print(f'Clicked {chem} at ({cx},{cy}) score={cval:.2f}')
+                            except Exception as e:
+                                print(f'Failed to click {chem}:', e)
+                            time.sleep(click_delay)
+
                 for name in ('sprinkler', 'shovel', 'squirrel', 'squirrel_2', 'log'):
+                    # only check squirrels every 100 iterations
+                    if name in ('squirrel', 'squirrel_2') and not check_squirrels:
+                        continue
                     entry = templates.get(name)
                     if not entry or entry.get('missing') or entry.get('cv') is None:
                         continue
@@ -238,17 +259,30 @@ def main():
                     except Exception as e:
                         print(f'Failed to click {name}:', e)
                     time.sleep(click_delay)
-                    if name == 'sprinkler':
-                        # double-harvest after sprinkler
-                        sprinkler_clicked = True
-                        try:
-                            pyautogui.click(harvest['x'], harvest['y'])
-                            time.sleep(click_delay)
-                            pyautogui.click(harvest['x'], harvest['y'])
-                            print('Clicked Harvest twice after sprinkler')
-                        except Exception as e:
-                            print('Failed to click Harvest:', e)
-                        time.sleep(click_delay)
+
+                    # after clicking a squirrel, look for a 'squirrel_upgrade' template and click it up to 10 times if present
+                    if name in ('squirrel', 'squirrel_2'):
+                        sus = templates.get('squirrel_upgrade')
+                        if sus and not sus.get('missing') and sus.get('cv') is not None:
+                            try:
+                                # wait briefly for upgrade to appear, then re-capture region and search for upgrade
+                                time.sleep(0.1)
+                                screen2 = ImageGrab.grab(bbox=(rx, ry, rx + rw, ry + rh)).convert('RGB')
+                                img_np2 = np.array(screen2)
+                                img_cv2 = cv2.cvtColor(img_np2, cv2.COLOR_RGB2BGR)
+                                up_val, up_loc, up_size = match_template_multi(img_cv2, sus['cv'], sus['w'], sus['h'], scales=scales)
+                                if up_val >= per_thresholds.get('squirrel_upgrade', 0.85) and up_loc is not None:
+                                    up_x = rx + up_loc[0] + up_size[0] // 2
+                                    up_y = ry + up_loc[1] + up_size[1] // 2
+                                    try:
+                                        for _ in range(10):
+                                            pyautogui.click(up_x, up_y)
+                                            time.sleep(click_delay)
+                                        print(f'Clicked squirrel_upgrade 10 times at ({up_x},{up_y}) score={up_val:.2f}')
+                                    except Exception as e:
+                                        print('Failed to click squirrel_upgrade:', e)
+                            except Exception as e:
+                                print('Error searching for squirrel_upgrade:', e)
 
             # If sprinkler wasn't found, still click Harvest twice before next scan
             if not sprinkler_clicked:
@@ -303,6 +337,7 @@ def main():
 
             # main loop delay
             time.sleep(0.3)
+            iteration += 1
     except KeyboardInterrupt:
         print('\nStopped by user (KeyboardInterrupt).')
     finally:
