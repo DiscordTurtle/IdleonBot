@@ -118,10 +118,8 @@ def main():
                     pass
             # click UseBoxes once
             pyautogui.click(use_box['x'], use_box['y'])
-            
-
             # repeat delay
-            time.sleep(0.1)
+            time.sleep(0.05)
     except KeyboardInterrupt:
         print('\nStopped by user (KeyboardInterrupt).')
     finally:
