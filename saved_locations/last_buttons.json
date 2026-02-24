@@ -1,10 +1,10 @@
 {
   "buttons": [
     {
-      "name": "Pen",
+      "name": "Harvest",
       "center": {
-        "x": 162,
-        "y": 863
+        "x": 1333,
+        "y": 81
       },
       "rgb": [
         255,
@@ -13,10 +13,10 @@
       ]
     },
     {
-      "name": "OrderBox",
+      "name": "Upgrades",
       "center": {
-        "x": 546,
-        "y": 777
+        "x": 1496,
+        "y": 208
       },
       "rgb": [
         255,
@@ -25,10 +25,10 @@
       ]
     },
     {
-      "name": "ResetStreak",
+      "name": "Mutation",
       "center": {
-        "x": 753,
-        "y": 499
+        "x": 1500,
+        "y": 345
       },
       "rgb": [
         255,
@@ -37,10 +37,82 @@
       ]
     },
     {
-      "name": "UseBoxes",
+      "name": "Imports",
       "center": {
-        "x": 963,
-        "y": 778
+        "x": 1499,
+        "y": 484
+      },
+      "rgb": [
+        255,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Superbits",
+      "center": {
+        "x": 1496,
+        "y": 624
+      },
+      "rgb": [
+        255,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Palette",
+      "center": {
+        "x": 1496,
+        "y": 759
+      },
+      "rgb": [
+        255,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "OnOff",
+      "center": {
+        "x": 1273,
+        "y": 342
+      },
+      "rgb": [
+        255,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "bits_value",
+      "center": {
+        "x": 590,
+        "y": 502
+      },
+      "rgb": [
+        255,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "bits_speed",
+      "center": {
+        "x": 947,
+        "y": 505
+      },
+      "rgb": [
+        255,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "close_upgrades",
+      "center": {
+        "x": 1387,
+        "y": 133
       },
       "rgb": [
         255,
@@ -50,7 +122,7 @@
     }
   ],
   "panel": {
-    "x": 1610,
-    "y": 10
+    "x": 1558,
+    "y": 340
   }
 }

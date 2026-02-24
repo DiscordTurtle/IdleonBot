@@ -49,6 +49,10 @@ except Exception:
 
 from PIL import ImageGrab, Image
 
+# import upgrade_garden from sibling module
+sys.path.insert(0, os.path.dirname(__file__))
+from upgrade_sequence import upgrade_garden
+
 
 def load_locations(path):
     if not os.path.exists(path):
@@ -86,7 +90,7 @@ def load_region(path):
 
 
 def load_templates(repo_root):
-    names = ['sprinkler.png', 'log.png', 'squirrel.png', 'squirrel_2.png', 'shovel.png', 'squirrel_upgrade.png', 'chem_plant_1.png', 'chem_plant_2.png', 'log_minigame.png']
+    names = ['sprinkler.png', 'log.png', 'squirrel.png', 'squirrel_2.png', 'shovel.png', 'squirrel_upgrade.png', 'chem_plant_1.png', 'chem_plant_2.png', 'log_minigame.png', 'rat.png', 'rat_upgrade.png', 'rat_upgrade_2.png']
     templates = {}
     for fname in names:
         path = os.path.join(repo_root, 'saved_images', 'gaming', fname)
@@ -184,7 +188,7 @@ def main():
     pyautogui.FAILSAFE = False
     pyautogui.PAUSE = 0.01
 
-    per_thresholds = {'sprinkler': 0.1, 'log': 0.1, 'squirrel': 0.1, 'squirrel_2': 0.1, 'shovel': 0.1, 'squirrel_upgrade': 0.85, 'chem_plant_1': 0.1, 'chem_plant_2': 0.1, 'log_minigame': 0.7}
+    per_thresholds = {'sprinkler': 0.1, 'log': 0.1, 'squirrel': 0.1, 'squirrel_2': 0.1, 'shovel': 0.1, 'squirrel_upgrade': 0.85, 'chem_plant_1': 0.1, 'chem_plant_2': 0.1, 'log_minigame': 0.7, 'rat': 0.1, 'rat_upgrade': 0.85, 'rat_upgrade_2': 0.85}
     scales = [0.85, 0.9, 1.0, 1.05]
     click_delay = 0.12  # delay after clicks to reduce missed clicks
 
@@ -206,13 +210,22 @@ def main():
                 except Exception:
                     pass
 
+            # Start every iteration by clicking Harvest twice
+            try:
+                pyautogui.click(harvest['x'], harvest['y'])
+                time.sleep(click_delay)
+                pyautogui.click(harvest['x'], harvest['y'])
+                print(f'[{iteration}] Clicked Harvest twice')
+            except Exception as e:
+                print(f'[{iteration}] Failed to click Harvest:', e)
+
             # screenshot region and search for needles in order
             try:
                 screen = ImageGrab.grab(bbox=(rx, ry, rx + rw, ry + rh)).convert('RGB')
                 img_np = np.array(screen)
                 img_cv = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
             except Exception as e:
-                print('Region capture failed:', e)
+                print(f'[{iteration}] Region capture failed:', e)
                 img_cv = None
 
             found_map = {}  # name -> (center_x, center_y, score)
@@ -228,14 +241,14 @@ def main():
                             cy = ry + cloc[1] + csize[1] // 2
                             try:
                                 pyautogui.click(cx, cy)
-                                print(f'Clicked {chem} at ({cx},{cy}) score={cval:.2f}')
+                                print(f'[{iteration}] Clicked {chem} at ({cx},{cy}) score={cval:.2f}')
                             except Exception as e:
-                                print(f'Failed to click {chem}:', e)
+                                print(f'[{iteration}] Failed to click {chem}:', e)
                             time.sleep(click_delay)
 
-                for name in ('sprinkler', 'shovel', 'squirrel', 'squirrel_2', 'log'):
-                    # only check squirrels every 100 iterations
-                    if name in ('squirrel', 'squirrel_2') and not check_squirrels:
+                for name in ('sprinkler', 'shovel', 'squirrel', 'squirrel_2', 'rat', 'log'):
+                    # only check squirrels and rats every 100 iterations
+                    if name in ('squirrel', 'squirrel_2', 'rat') and not check_squirrels:
                         continue
                     entry = templates.get(name)
                     if not entry or entry.get('missing') or entry.get('cv') is None:
@@ -247,17 +260,16 @@ def main():
                         center_y = ry + best_loc[1] + best_size[1] // 2
                         found_map[name] = (center_x, center_y, best_val)
 
-            # Click in preferred order. If sprinkler is clicked, click Harvest twice immediately afterwards.
-            preferred_order = ['sprinkler', 'shovel', 'squirrel', 'squirrel_2', 'log']
-            sprinkler_clicked = False
+            # Click in preferred order.
+            preferred_order = ['sprinkler', 'shovel', 'squirrel', 'squirrel_2', 'rat', 'log']
             for name in preferred_order:
                 if name in found_map:
                     cx, cy, score = found_map[name]
                     try:
                         pyautogui.click(cx, cy)
-                        print(f'Clicked {name} at ({cx},{cy}) score={score:.2f}')
+                        print(f'[{iteration}] Clicked {name} at ({cx},{cy}) score={score:.2f}')
                     except Exception as e:
-                        print(f'Failed to click {name}:', e)
+                        print(f'[{iteration}] Failed to click {name}:', e)
                     time.sleep(click_delay)
 
                     # after clicking a squirrel, look for a 'squirrel_upgrade' template and click it up to 10 times if present
@@ -278,21 +290,40 @@ def main():
                                         for _ in range(10):
                                             pyautogui.click(up_x, up_y)
                                             time.sleep(click_delay)
-                                        print(f'Clicked squirrel_upgrade 10 times at ({up_x},{up_y}) score={up_val:.2f}')
+                                        print(f'[{iteration}] Clicked squirrel_upgrade 10 times at ({up_x},{up_y}) score={up_val:.2f}')
                                     except Exception as e:
-                                        print('Failed to click squirrel_upgrade:', e)
+                                        print(f'[{iteration}] Failed to click squirrel_upgrade:', e)
                             except Exception as e:
-                                print('Error searching for squirrel_upgrade:', e)
+                                print(f'[{iteration}] Error searching for squirrel_upgrade:', e)
+                    # after clicking a rat, look for a 'rat_upgrade' template and click it up to 10 times if present
+                    if name == 'rat':
+                        # wait briefly for upgrade to appear, then re-capture region
+                        time.sleep(0.1)
+                        try:
+                            screen2 = ImageGrab.grab(bbox=(rx, ry, rx + rw, ry + rh)).convert('RGB')
+                            img_np2 = np.array(screen2)
+                            img_cv2 = cv2.cvtColor(img_np2, cv2.COLOR_RGB2BGR)
+                        except Exception as e:
+                            print(f'[{iteration}] Region capture failed for rat upgrade check:', e)
+                            img_cv2 = None
 
-            # If sprinkler wasn't found, still click Harvest twice before next scan
-            if not sprinkler_clicked:
-                try:
-                    pyautogui.click(harvest['x'], harvest['y'])
-                    time.sleep(click_delay)
-                    pyautogui.click(harvest['x'], harvest['y'])
-                    print('Clicked Harvest twice')
-                except Exception as e:
-                    print('Failed to click Harvest:', e)
+                        for rat_tpl_name in ('rat_upgrade', 'rat_upgrade_2'):
+                            rat_up = templates.get(rat_tpl_name)
+                            if img_cv2 is not None and rat_up and not rat_up.get('missing') and rat_up.get('cv') is not None:
+                                try:
+                                    up_val, up_loc, up_size = match_template_multi(img_cv2, rat_up['cv'], rat_up['w'], rat_up['h'], scales=scales)
+                                    if up_val >= per_thresholds.get(rat_tpl_name, 0.85) and up_loc is not None:
+                                        up_x = rx + up_loc[0] + up_size[0] // 2
+                                        up_y = ry + up_loc[1] + up_size[1] // 2
+                                        try:
+                                            for _ in range(10):
+                                                pyautogui.click(up_x, up_y)
+                                                time.sleep(click_delay)
+                                            print(f'[{iteration}] Clicked {rat_tpl_name} 10 times at ({up_x},{up_y}) score={up_val:.2f}')
+                                        except Exception as e:
+                                            print(f'[{iteration}] Failed to click {rat_tpl_name}:', e)
+                                except Exception as e:
+                                    print(f'[{iteration}] Error searching for {rat_tpl_name}:', e)
 
             # small delay to allow UI update
             time.sleep(0.12)
@@ -311,7 +342,7 @@ def main():
                     lm_val, lm_loc, lm_size = match_template_multi(img_cv, lm['cv'], lm['w'], lm['h'], scales=scales)
                     if lm_val >= per_thresholds.get('log_minigame', 0.1) and lm_loc is not None:
                         if log_button:
-                            print('Log minigame detected; clicking log_minigame_center repeatedly until it disappears.')
+                            print(f'[{iteration}] Log minigame detected; clicking log_minigame_center repeatedly until it disappears.')
                             # repeat clicking until log_minigame disappears or stop pressed
                             while True:
                                 if stop_event.is_set():
@@ -319,7 +350,7 @@ def main():
                                 try:
                                     pyautogui.click(log_button['x'], log_button['y'])
                                 except Exception as e:
-                                    print('Failed to click log_minigame button:', e)
+                                    print(f'[{iteration}] Failed to click log_minigame button:', e)
                                 time.sleep(0.5)
                                 # re-check presence
                                 try:
@@ -328,12 +359,21 @@ def main():
                                     img_cv = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
                                     lm_val2, _, _ = match_template_multi(img_cv, lm['cv'], lm['w'], lm['h'], scales=scales)
                                     if lm_val2 < per_thresholds.get('log_minigame', 0.1):
-                                        print('Log minigame no longer present.')
+                                        print(f'[{iteration}] Log minigame no longer present.')
                                         break
                                 except Exception:
                                     break
                         else:
-                            print('Log minigame detected but no saved location to click (log_minigame_center missing).')
+                            print(f'[{iteration}] Log minigame detected but no saved location to click (log_minigame_center missing).')
+
+            # Every 100 iterations, run the upgrade sequence
+            if iteration % 100 == 0:
+                try:
+                    time.sleep(0.5)
+                    upgrade_garden()
+                    print(f'[{iteration}] Ran upgrade_garden sequence')
+                except Exception as e:
+                    print(f'[{iteration}] Failed to run upgrade_garden:', e)
 
             # main loop delay
             time.sleep(0.3)
