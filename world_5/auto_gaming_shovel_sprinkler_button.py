@@ -90,7 +90,7 @@ def load_region(path):
 
 
 def load_templates(repo_root):
-    names = ['sprinkler.png', 'log.png', 'squirrel.png', 'squirrel_2.png', 'shovel.png', 'squirrel_upgrade.png', 'chem_plant_1.png', 'chem_plant_2.png', 'log_minigame.png', 'rat.png', 'rat_upgrade.png', 'rat_upgrade_2.png']
+    names = ['log.png', 'squirrel.png', 'squirrel_2.png', 'squirrel_upgrade.png', 'chem_plant_1.png', 'chem_plant_2.png', 'log_minigame.png', 'rat.png', 'rat_upgrade.png', 'rat_upgrade_2.png']
     templates = {}
     for fname in names:
         path = os.path.join(repo_root, 'saved_images', 'gaming', fname)
@@ -159,11 +159,14 @@ def main():
     except Exception:
         loglocs = {}
 
-    if 'Harvest' not in gaming:
-        print("'Harvest' not found in saved_locations/gaming.json")
-        return
+    for required in ('Harvest', 'sprinkler', 'shovel'):
+        if required not in gaming:
+            print(f"'{required}' not found in saved_locations/gaming.json")
+            return
 
     harvest = gaming['Harvest']
+    sprinkler_btn = gaming['sprinkler']
+    shovel_btn = gaming['shovel']
     log_button = loglocs.get('log_minigame_center')
 
     # region for searching
@@ -188,9 +191,10 @@ def main():
     pyautogui.FAILSAFE = False
     pyautogui.PAUSE = 0.01
 
-    per_thresholds = {'sprinkler': 0.1, 'log': 0.1, 'squirrel': 0.1, 'squirrel_2': 0.1, 'shovel': 0.1, 'squirrel_upgrade': 0.85, 'chem_plant_1': 0.1, 'chem_plant_2': 0.1, 'log_minigame': 0.7, 'rat': 0.1, 'rat_upgrade': 0.85, 'rat_upgrade_2': 0.85}
+    per_thresholds = {'log': 0.1, 'squirrel': 0.1, 'squirrel_2': 0.1, 'squirrel_upgrade': 0.85, 'chem_plant_1': 0.1, 'chem_plant_2': 0.1, 'log_minigame': 0.7, 'rat': 0.1, 'rat_upgrade': 0.85, 'rat_upgrade_2': 0.85}
     scales = [0.85, 0.9, 1.0, 1.05]
-    click_delay = 0.12  # delay after clicks to reduce missed clicks
+    click_delay = 0.05  # delay after clicks to reduce missed clicks
+    check_log = False  # set to True to enable log template searching/clicking
 
     iteration = 1
     try:
@@ -210,14 +214,22 @@ def main():
                 except Exception:
                     pass
 
-            # Start every iteration by clicking Harvest twice
+            # Start every iteration by clicking Harvest twice, then sprinkler twice, then shovel twice
             try:
                 pyautogui.click(harvest['x'], harvest['y'])
                 time.sleep(click_delay)
                 pyautogui.click(harvest['x'], harvest['y'])
-                print(f'[{iteration}] Clicked Harvest twice')
+                time.sleep(click_delay)
+                # pyautogui.click(sprinkler_btn['x'], sprinkler_btn['y'])
+                # time.sleep(click_delay)
+                # pyautogui.click(sprinkler_btn['x'], sprinkler_btn['y'])
+                # time.sleep(click_delay)
+                pyautogui.click(shovel_btn['x'], shovel_btn['y'])
+                time.sleep(click_delay)
+                pyautogui.click(shovel_btn['x'], shovel_btn['y'])
+                print(f'[{iteration}] Clicked Harvest x2, sprinkler x2, shovel x2')
             except Exception as e:
-                print(f'[{iteration}] Failed to click Harvest:', e)
+                print(f'[{iteration}] Failed to click buttons:', e)
 
             # screenshot region and search for needles in order
             try:
@@ -246,9 +258,11 @@ def main():
                                 print(f'[{iteration}] Failed to click {chem}:', e)
                             time.sleep(click_delay)
 
-                for name in ('sprinkler', 'shovel', 'squirrel', 'squirrel_2', 'rat', 'log'):
+                for name in ('squirrel', 'squirrel_2', 'rat', 'log'):
                     # only check squirrels and rats every 100 iterations
                     if name in ('squirrel', 'squirrel_2', 'rat') and not check_squirrels:
+                        continue
+                    if name == 'log' and not check_log:
                         continue
                     entry = templates.get(name)
                     if not entry or entry.get('missing') or entry.get('cv') is None:
@@ -261,7 +275,7 @@ def main():
                         found_map[name] = (center_x, center_y, best_val)
 
             # Click in preferred order.
-            preferred_order = ['sprinkler', 'shovel', 'squirrel', 'squirrel_2', 'rat', 'log']
+            preferred_order = ['squirrel', 'squirrel_2', 'rat', 'log']
             for name in preferred_order:
                 if name in found_map:
                     cx, cy, score = found_map[name]
