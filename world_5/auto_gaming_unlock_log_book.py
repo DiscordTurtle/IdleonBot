@@ -228,25 +228,42 @@ def main():
                 print('Failed to click Harvest:', e)
             time.sleep(click_delay)
 
-            # Every iteration, check for and click one chem plant
-            if img_cv is not None and CV2_AVAILABLE:
-                for chem in ('chem_plant_1', 'chem_plant_2'):
-                    chem_entry = templates.get(chem)
-                    if chem_entry and not chem_entry.get('missing') and chem_entry.get('cv') is not None:
-                        cval, cloc, csize = match_template_multi(img_cv, chem_entry['cv'], chem_entry['w'], chem_entry['h'], scales=scales)
-                        if cval >= per_thresholds.get(chem, 0.1) and cloc is not None:
-                            cx = rx + cloc[0] + csize[0] // 2
-                            cy = ry + cloc[1] + csize[1] // 2
-                            try:
-                                pyautogui.click(cx, cy)
-                                print(f'Clicked {chem} at ({cx},{cy}) score={cval:.2f}')
-                            except Exception as e:
-                                print(f'Failed to click {chem}:', e)
-                            time.sleep(click_delay)
+            # Every 500 iterations, look for chem plants / squirrel/rat/shovel/log
+            if iteration % 500 == 0:
+                # Harvest all chem plants until none remain (max 40 clicks)
+                chem_clicks = 0
+                max_chem_clicks = 75
+                if CV2_AVAILABLE:
+                    while chem_clicks < max_chem_clicks:
+                        try:
+                            screen = ImageGrab.grab(bbox=(rx, ry, rx + rw, ry + rh)).convert('RGB')
+                            img_np = np.array(screen)
+                            img_cv_chem = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+                        except Exception as e:
+                            print('Region capture failed:', e)
                             break
+                        found_chem = False
+                        for chem in ('chem_plant_1', 'chem_plant_2'):
+                            chem_entry = templates.get(chem)
+                            if chem_entry and not chem_entry.get('missing') and chem_entry.get('cv') is not None:
+                                cval, cloc, csize = match_template_multi(img_cv_chem, chem_entry['cv'], chem_entry['w'], chem_entry['h'], scales=scales)
+                                if cval >= per_thresholds.get(chem, 0.1) and cloc is not None:
+                                    cx = rx + cloc[0] + csize[0] // 2
+                                    cy = ry + cloc[1] + csize[1] // 2
+                                    try:
+                                        pyautogui.click(cx, cy)
+                                        chem_clicks += 1
+                                        print(f'Clicked {chem} at ({cx},{cy}) score={cval:.2f} ({chem_clicks}/{max_chem_clicks})')
+                                    except Exception as e:
+                                        print(f'Failed to click {chem}:', e)
+                                    time.sleep(click_delay)
+                                    found_chem = True
+                                    break  # re-capture after each click
+                        if not found_chem:
+                            break
+                    if chem_clicks >= max_chem_clicks:
+                        print(f'Reached max chem plant clicks ({max_chem_clicks}).')
 
-            # Every 100 iterations, look for squirrel/rat/shovel/log
-            if iteration % 100 == 0:
                 # Re-capture region for squirrel/rat checking
                 try:
                     screen = ImageGrab.grab(bbox=(rx, ry, rx + rw, ry + rh)).convert('RGB')
